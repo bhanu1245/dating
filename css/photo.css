@@ -1,0 +1,53 @@
+@charset "UTF-8";
+
+.modal-body .upload-progress {
+
+    width: 100%;
+    height: 3px;
+    overflow: hidden;
+    font-size: 0.703125rem;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    display: none;
+}
+
+.modal-body .profile-user-photo {
+    margin: 0 auto;
+    display: flex;
+    background-size: cover;
+    border: 2px solid #fff;
+    border-radius: 100%;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    width: 110px;
+    height: 110px;
+
+}
+
+.modal-body .upload-button {
+    display: inline-block;
+    position: relative;
+    background: rgba(0, 0, 0, 0.600);
+    padding: 7px 13px 7px 13px;
+    text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.506);
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    margin: 8px;
+    margin-left: 0px;
+    opacity: 0.7;
+}
+
+.modal-body #profile-photo-upload {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: block;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+    left: 0;
+    top: 0;
+}

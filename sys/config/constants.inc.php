@@ -1,0 +1,64 @@
+<?php
+
+// 🔥 ADD THIS (VERY IMPORTANT)
+define("APP_URL", "https://flure.in"); // change if needed
+
+/*!
+ * https://raccoonsquare.com, https://raccoonjohn.com
+ */
+
+// GEO
+$B['GEO_DEFAULT_LAT'] = 37.421011;
+$B['GEO_DEFAULT_LNG'] = -122.084968;
+
+$B['GEO_DEFAULT_DISTANCE'] = 10000;
+$B['GEO_MAX_DISTANCE'] = 30000;
+$B['GEO_MIN_DISTANCE'] = 30;
+
+// Google
+$B['GOOGLE_RECAPTCHA_WEB'] = false;
+$B['GOOGLE_AUTHORIZATION'] = false;
+
+// Files
+$C['VIDEO_FILE_MAX_SIZE'] = 104857600;
+$C['IMAGE_FILE_MAX_SIZE'] = 5242880;
+
+// Admin levels
+$C['ADMIN_ACCESS_LEVEL_ALL_RIGHTS'] = 0;
+$C['ADMIN_ACCESS_LEVEL_READ_WRITE_RIGHTS'] = 1;
+$C['ADMIN_ACCESS_LEVEL_MODERATOR_RIGHTS'] = 2;
+$C['ADMIN_ACCESS_LEVEL_READ_ONLY_RIGHTS'] = 3;
+
+// API
+$C['API_VERSION'] = "v2";
+
+// App types
+$C['APP_TYPE_ALL'] = -1;
+$C['APP_TYPE_MANAGER'] = 0;
+$C['APP_TYPE_WEB'] = 1;
+$C['APP_TYPE_ANDROID'] = 2;
+$C['APP_TYPE_IOS'] = 3;
+
+// Errors (IMPORTANT for uploads)
+$C['ERROR_IMAGE_FILE_FORMAT'] = 503;
+$C['ERROR_IMAGE_FILE_WIDTH_HEIGHT'] = 504;
+$C['ERROR_IMAGE_FILE_ADULT'] = 555;
+$C['ERROR_IMAGE_FILE_VIOLENCE'] = 556;
+$C['ERROR_IMAGE_FILE_RACY'] = 557;
+$C['ERROR_IMAGE_FILE_FACE'] = 558;
+
+// Signin
+$C['SIGNIN_EMAIL'] = 0;
+$C['SIGNIN_OTP'] = 1;
+$C['SIGNIN_FACEBOOK'] = 2;
+$C['SIGNIN_GOOGLE'] = 3;
+
+// OAuth
+$C['OAUTH_TYPE_FACEBOOK'] = 0;
+$C['OAUTH_TYPE_GOOGLE'] = 1;
+
+// Envato
+$C['ENVATO_ITEM_ID'] = 14781822;
+
+// Demo mode
+$B['APP_DEMO'] = false;

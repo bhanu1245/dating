@@ -1,0 +1,64 @@
+<?php
+
+    /*!
+     * ifsoft.co.uk
+     *
+     * http://ifsoft.com.ua, http://ifsoft.co.uk
+     * raccoonsquare@gmail.com
+     *
+     * Copyright 2012-2019 Demyanchuk Dmitry (raccoonsquare@gmail.com)
+     */
+
+    $page_id = "terms";
+
+    $css_files = array("my.css");
+    $page_title = $LANG['page-terms']." | ".APP_TITLE;
+
+    include_once("html/common/site_header.inc.php");
+
+?>
+
+<body class="about-page sn-hide">
+
+
+    <?php
+        include_once("html/common/site_topbar.inc.php");
+    ?>
+
+
+    <div class="wrap content-page">
+
+        <div class="main-column">
+
+            <div class="main-content">
+
+                <section class="standard-page">
+
+                <?php
+
+                    if (file_exists("html/terms/".$LANG['lang-code'].".inc.php")) {
+
+                        include_once("html/terms/".$LANG['lang-code'].".inc.php");
+
+                    } else {
+
+                        include_once("html/terms/en.inc.php");
+                    }
+                ?>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <?php
+
+        include_once("html/common/site_footer.inc.php");
+    ?>
+
+
+</body
+</html>

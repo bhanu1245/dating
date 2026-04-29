@@ -1,0 +1,261 @@
+/* rje landing css */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--common_body_background);
+}
+
+.rje-body {
+  min-height: 100vh;
+}
+
+/* Layout */
+.rje-auth {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left illustration panel */
+.rje-auth__left {
+  flex: 1;
+  display: none;
+}
+
+.rje-illustration {
+  height: 100%;
+  width: 100%;
+  /*background: url("/img/landing_bg.jpg?x1");*/
+  /*background-size: cover;*/
+  background: linear-gradient(to right, #E2485E, #FF655B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: #ffffff;
+}
+
+.rje-illustration__content {
+  max-width: 480px;
+  text-shadow: 1px 1px #000000;
+}
+
+.rje-illustration__title {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.rje-illustration__text {
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.6;
+  opacity: 0.9;
+  text-shadow: 1px 1px #000000;
+}
+
+/* Right panel */
+.rje-auth__right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.rje-auth__right #main-footer {
+
+  padding: 0;
+  background-color: transparent !important;
+}
+
+.rje-auth__right #main-footer .wrap {
+
+  padding: 0 !important;
+}
+
+/* Card */
+.rje-card {
+  width: 100%;
+  max-width: 420px;
+  /*background: #ffffff;*/
+  margin: 0 auto;
+  border-radius: 16px;
+  padding: 40px 32px;
+  /*box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);*/
+}
+
+.rje-logo {
+  display: flex;
+  height: 55px;
+  width: 175px;
+  background: url("/img/logo.png?x=4") no-repeat;
+  background-size: cover;
+  margin: 0 auto;
+}
+
+.rje-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: var(--text_title);
+}
+
+/* Social buttons */
+.rje-social {
+  width: 100%;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+
+.rje-social:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Divider */
+.rje-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.rje-divider::before,
+.rje-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rje-divider span {
+  padding: 0 12px;
+}
+
+/* Form */
+.rje-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rje-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.rje-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text_sub_title);
+}
+
+.rje-input {
+  /*height: 48px;*/
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  font-size: 15px;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.rje-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  /*box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);*/
+}
+
+.rje-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rje-link {
+  font-size: 14px;
+  color: var(--text_link);
+  text-decoration: none;
+}
+
+.rje-link:hover {
+  text-decoration: underline;
+  color: var(--text_link_hover);
+}
+
+.rje-link--strong {
+  font-weight: 600;
+}
+
+/* Primary button */
+.rje-btn {
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rje-btn--primary {
+  background: #6366f1;
+  color: #ffffff;
+  margin-top: 6px;
+}
+
+.rje-btn--primary:hover {
+
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.rje-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text_sub_title);
+}
+
+
+@media (min-width: 992px) {
+  .rje-auth__left {
+    display: block;
+  }
+
+  .rje-auth__right {
+    flex: 0 0 50%;
+  }
+
+  .rje-auth__left {
+    flex: 0 0 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .rje-card {
+    padding: 28px 20px;
+    border-radius: 14px;
+  }
+
+  .rje-title {
+    font-size: 24px;
+  }
+}
