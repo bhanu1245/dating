@@ -18,6 +18,21 @@ App.run = function() {
         success: function(response) {
 
             if (response.error === false) {
+                if (response.hasOwnProperty("registrationComplete")) {
+                    account.registrationComplete = parseInt(response.registrationComplete, 10) || 0;
+                }
+                if (response.hasOwnProperty("lowPhotoUrl") && response.lowPhotoUrl.length > 0) {
+                    account.photoUrl = response.lowPhotoUrl;
+                }
+
+                if (typeof App.hasProfilePhoto === "function") {
+
+                    if (account.registrationComplete === 1 || App.hasProfilePhoto()) {
+                        $("#photoModal").modal("hide");
+                    } else if (account.registrationComplete === 0 && account.id != 0) {
+                        $('#photoModal').modal('show');
+                    }
+                }
 
                 if (response.notificationsCount < 1) {
                     $("span.notifications-badge").addClass("hidden");
