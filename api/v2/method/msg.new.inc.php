@@ -109,7 +109,7 @@ if (!empty($_POST)) {
         $messages = new msg($dbo);
         $messages->setRequestFrom($accountId);
 
-        $result = $messages->create($profileId, $chatId, $messageText, $messageImg, $chatFromUserId, $chatToUserId, $listId, $stickerId, $stickerImgUrl, $videoUrl, $videoImgUrl);
+        $result = $messages->create($profileId, $chatId, $messageText, $messageImg, $accountId, $profileId, $listId, $stickerId, $stickerImgUrl, $videoUrl, $videoImgUrl);
     }
 
     echo json_encode($result);

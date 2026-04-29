@@ -159,6 +159,10 @@ if (!empty($_POST)) {
 
     $result = $account->get();
 
+    if (!$result['error'] && auth::isSession() && auth::getCurrentUserId() == $accountId) {
+        auth::setCurrentUserLogin($result['username']);
+    }
+
     echo json_encode($result);
     exit;
 }

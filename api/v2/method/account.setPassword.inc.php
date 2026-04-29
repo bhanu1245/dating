@@ -55,6 +55,10 @@ if (!empty($_POST)) {
     }
 
 
+    if (!$result['error'] && auth::isSession() && auth::getCurrentUserId() == $accountId) {
+        auth::setCurrentUserLogin($login);
+    }
+
     echo json_encode($result);
     exit;
 }

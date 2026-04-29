@@ -40,7 +40,7 @@ if (!empty($_POST)) {
         api::printError(ERROR_ACCESS_TOKEN, "Error authorization.");
     }
 
-    if (isset($_FILES['uploaded_video_file']['name'])) {
+    if (isset($_FILES['uploaded_video_file']['name']) && strlen($_FILES['uploaded_video_file']['name']) > 0) {
 
 //        if (mime_content_type($_FILES['uploaded_video_file']['name']) === 'video/mp4') {
 //

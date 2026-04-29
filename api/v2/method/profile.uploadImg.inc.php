@@ -1,53 +1,72 @@
-case IMAGE_TYPE_PROFILE_PHOTO: {
+<?php
 
-    $result = $imglib->newProfilePhoto($new_file_name);
+if (!defined("APP_SIGNATURE")) {
+    header("Location: /");
+    exit;
+}
 
-    if (!$result['error']) {
+header('Content-Type: application/json');
 
-        // Delete old photos
-        $profile = new profile($dbo, $accountId);
-        $profileInfo = $profile->getVeryShort();
-        unset($profile);
+$result = ["error" => true, "error_code" => ERROR_UNKNOWN, "error_description" => "Unknown error"];
 
-        @unlink(PHOTO_PATH."/".basename($profileInfo['normalPhotoUrl']));
-        @unlink(PHOTO_PATH."/".basename($profileInfo['bigPhotoUrl']));
-        @unlink(PHOTO_PATH."/".basename($profileInfo['lowPhotoUrl']));
-        unset($profileInfo);
-
-        // Set new photos
-        $account = new account($dbo, $accountId);
-        $account->setPhoto($result);
-        unset($account);
-
-        $account = new account($dbo, $accountId);
-        $account->setRegistrationComplete(1);
-        unset($account);
-
-        if (auth::isSession() && auth::getCurrentUserId() == $accountId) {
-
-            auth::setRegistrationComplete(1);
-        }
-
-        // Moderator
-        $moderator = new moderator($dbo);
-        $moderator->postPhoto($accountId, $result['originPhotoUrl']);
-        unset($moderator);
-
-        $settings = new settings($dbo);
-
-        if ($settings->getIntValue("allowAutoModerate") == 1) {
-
-            $moderator = new moderator($dbo);
-            $moderator->approvePhoto($accountId);
-            unset($moderator);
-        }
-
-        unset($settings);
-
-        if (auth::isSession()) {
-            auth::setCurrentUserPhotoUrl($result['normalPhotoUrl']);
-        }
+try {
+    if (empty($_POST)) {
+        echo json_encode($result);
+        exit;
     }
 
-    break;
+    $accountId = helper::clearInt($_POST['accountId'] ?? 0);
+    $accessToken = helper::escapeText(helper::clearText($_POST['accessToken'] ?? ''));
+
+    $auth = new auth($dbo);
+    if (!$auth->authorize($accountId, $accessToken)) {
+        api::printError(ERROR_ACCESS_TOKEN, "Error authorization.");
+    }
+
+    if (!isset($_FILES['uploaded_file']) || $_FILES['uploaded_file']['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('No file uploaded');
+    }
+
+    $imglib = new imglib($dbo);
+    if (!$imglib->isImageFile($_FILES['uploaded_file']['tmp_name'], true, false)) {
+        throw new Exception('Invalid image format');
+    }
+
+    $upload = $imglib->newProfilePhoto($_FILES['uploaded_file']['tmp_name']);
+    if ($upload['error']) {
+        throw new Exception('Failed to process image');
+    }
+
+    $profile = new profile($dbo, $accountId);
+    $profileInfo = $profile->getVeryShort();
+    @unlink(PHOTO_PATH.'/'.basename($profileInfo['normalPhotoUrl']));
+    @unlink(PHOTO_PATH.'/'.basename($profileInfo['bigPhotoUrl']));
+    @unlink(PHOTO_PATH.'/'.basename($profileInfo['lowPhotoUrl']));
+
+    $account = new account($dbo, $accountId);
+    $account->setPhoto($upload);
+    $account->setRegistrationComplete(1);
+
+    if (auth::isSession() && auth::getCurrentUserId() == $accountId) {
+        auth::setCurrentUserPhotoUrl($upload['normalPhotoUrl']);
+        auth::setRegistrationComplete(1);
+    }
+
+    $result = [
+        "error" => false,
+        "error_code" => ERROR_SUCCESS,
+        "error_description" => "ok",
+        "originPhotoUrl" => $upload['originPhotoUrl'],
+        "normalPhotoUrl" => $upload['normalPhotoUrl'],
+        "bigPhotoUrl" => $upload['bigPhotoUrl'],
+        "lowPhotoUrl" => $upload['lowPhotoUrl'],
+        "photoUrl" => $upload['normalPhotoUrl'],
+        "registrationComplete" => 1
+    ];
+} catch (Throwable $e) {
+    $result['error'] = true;
+    $result['error_description'] = $e->getMessage();
 }
+
+echo json_encode($result);
+exit;
