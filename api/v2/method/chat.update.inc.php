@@ -38,12 +38,16 @@ if (!empty($_POST)) {
         "error_code" => ERROR_UNKNOWN
     );
 
-//    $auth = new auth($dbo);
-//
-//    if (!$auth->authorize($accountId, $accessToken)) {
-//
-//        api::printError(ERROR_ACCESS_TOKEN, "Error authorization.");
-//    }
+$auth = new auth($dbo);
+
+    if (!$auth->authorize($accountId, $accessToken)) {
+
+        api::printError(ERROR_ACCESS_TOKEN, "Error authorization.");
+    }
+
+    if ($chatFromUserId != $accountId && $chatToUserId != $accountId) {
+        api::printError(ERROR_ACCESS_TOKEN, "Invalid chat participants.");
+    }
 
     // Set Free Messages Count for Function "Pro Mode"
 
