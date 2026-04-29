@@ -233,7 +233,8 @@
             username: "<?php echo auth::getCurrentUserLogin(); ?>",
             accessToken: "<?php echo auth::getAccessToken(); ?>",
             balance: "<?php echo auth::getCurrentUserBalance(); ?>",
-            registrationComplete: "<?php echo auth::getRegistrationComplete(); ?>"
+            registrationComplete: "<?php echo auth::getRegistrationComplete(); ?>",
+            photoUrl: "<?php echo auth::getCurrentUserPhotoUrl(); ?>"
         };
 
         var strings = {
@@ -327,6 +328,7 @@
                             $("span.avatar").css("background-image", "url(" + result.lowPhotoUrl + ")");
                             $("a.profile-user-photo-link").attr("href", result.originPhotoUrl);
                             $("img.profile-photo-avatar").attr("src", result.lowPhotoUrl);
+                            account.photoUrl = result.lowPhotoUrl;
 
                             $('#welcome-block').remove();
 
@@ -388,16 +390,23 @@
 
         window.App || ( window.App = {} );
 
+        App.hasProfilePhoto = function() {
+
+            if (!account.photoUrl || account.photoUrl.length === 0) return false;
+
+            return account.photoUrl.indexOf('/img/profile_default_photo.png') === -1;
+        };
+
         App.finishRegistration = function() {
 
-            account.registrationComplete = 0;
+            account.registrationComplete = 1;
 
             $("#photoModal").modal("hide");
-        }
+        };
 
         $(document).ready(function() {
 
-            if (account.registrationComplete == 0 && account.id != 0) {
+            if (account.registrationComplete == 0 && !App.hasProfilePhoto() && account.id != 0) {
 
                 $('#photoModal').modal('show');
             }

@@ -26,14 +26,15 @@ if (!empty($_POST)) {
     $guests_count = 0;
     $friends_count = 0;
 
-    // 🚀 FORCE COMPLETE (NO CONDITIONS)
-    $registrationComplete = 1;
+    $registrationComplete = 0;
 
     if ($accountId != 0) {
 
         $account = new account($dbo, $accountId);
         $accountInfo = $account->get();
         unset($account);
+
+        $registrationComplete = isset($accountInfo['registrationComplete']) ? (int) $accountInfo['registrationComplete'] : 0;
 
         // Messages
         if (APP_MESSAGES_COUNTERS) {
@@ -75,6 +76,7 @@ if (!empty($_POST)) {
         $result['pro'] = $accountInfo['pro'];
         $result['verified'] = $accountInfo['verified'];
         $result['balance'] = $accountInfo['balance'];
+        $result['lowPhotoUrl'] = $accountInfo['lowPhotoUrl'];
     }
 
     // Counters
@@ -84,8 +86,7 @@ if (!empty($_POST)) {
     $result['newFriendsCount'] = $friends_count;
     $result['newMatchesCount'] = $matches_count;
 
-    // 🚀 FORCE THIS ALWAYS
-    $result['registrationComplete'] = 1;
+    $result['registrationComplete'] = $registrationComplete;
 
     // Settings
     $settings = new settings($dbo);

@@ -1,22 +1,21 @@
 <?php
 
-// 🔥 START BUFFER
 ob_start();
-
-// 🔥 FORCE JSON
 header('Content-Type: application/json');
-
-// 🔥 HIDE ERRORS (avoid HTML in JSON)
 ini_set('display_errors', 0);
 
 try {
 
-    // ✅ ABSOLUTE PATH USING __DIR__ (BEST METHOD)
     require_once dirname(__DIR__, 3) . '/sys/config/db.inc.php';
     require_once dirname(__DIR__, 3) . '/sys/config/constants.inc.php';
+    require_once dirname(__DIR__, 3) . '/sys/class/class.helper.inc.php';
+    require_once dirname(__DIR__, 3) . '/sys/class/class.auth.inc.php';
     require_once dirname(__DIR__, 3) . '/sys/class/class.account.inc.php';
 
-    // 🔥 PDO SAFE MODE
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();
+    }
+
     $dbo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // ✅ Allowed extensions
@@ -68,7 +67,6 @@ try {
         throw new Exception("File not saved");
     }
 
-    // 🔥 AUTH
     $accountId = intval($_POST['accountId'] ?? 0);
     $accessToken = $_POST['accessToken'] ?? "";
 
@@ -76,20 +74,13 @@ try {
         throw new Exception("Missing account data");
     }
 
-    $account = new account($dbo, $accountId);
-
-   // ✅ FIXED AUTH (based on your project structure)
-    $account->setId($accountId);
-    $result = $account->get();
-
-    if (!$result) {
-    throw new Exception("Authorization failed");
+    $auth = new auth($dbo);
+    if (!$auth->authorize($accountId, $accessToken)) {
+        throw new Exception("Authorization failed");
     }
 
-    // ✅ URL
     $photo_url = "/uploads/photos/" . $file_name;
 
-    // 🔥 DB UPDATE
     $stmt = $dbo->prepare("
     UPDATE users 
     SET 
@@ -102,17 +93,23 @@ try {
 
     $stmt->execute([$photo_url, $photo_url, $photo_url, $accountId]);
 
-    // 🔥 DEBUG LOG (VERY IMPORTANT)
-    error_log("USER {$accountId} REGISTRATION COMPLETED");
+    if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id']) && intval($_SESSION['user_id']) === $accountId) {
 
-    // 🔥 CLEAN OUTPUT
+        auth::setCurrentUserPhotoUrl($photo_url);
+        auth::setRegistrationComplete(1);
+    }
+
     ob_end_clean();
 
-    // ✅ SUCCESS
     echo json_encode([
         "error" => false,
         "msg" => "Upload success",
-        "photoUrl" => $photo_url
+        "photoUrl" => $photo_url,
+        "originPhotoUrl" => $photo_url,
+        "normalPhotoUrl" => $photo_url,
+        "bigPhotoUrl" => $photo_url,
+        "lowPhotoUrl" => $photo_url,
+        "registrationComplete" => 1
     ]);
 
 } catch (Throwable $e) {

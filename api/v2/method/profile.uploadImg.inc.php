@@ -19,10 +19,14 @@ case IMAGE_TYPE_PROFILE_PHOTO: {
         $account->setPhoto($result);
         unset($account);
 
-        // 🔥 FORCE UPDATE (NO PREPARE)
-        $dbo->query("UPDATE users SET registrationComplete = 1 WHERE id = {$accountId}");
+        $account = new account($dbo, $accountId);
+        $account->setRegistrationComplete(1);
+        unset($account);
 
-        error_log("✅ registrationComplete updated for user: " . $accountId);
+        if (auth::isSession() && auth::getCurrentUserId() == $accountId) {
+
+            auth::setRegistrationComplete(1);
+        }
 
         // Moderator
         $moderator = new moderator($dbo);

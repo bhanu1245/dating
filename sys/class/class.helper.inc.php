@@ -406,8 +406,7 @@ class helper extends db_connect
 
     static function isCorrectPassword($password)
     {
-
-        if (preg_match('/^[a-z0-9_]{6,20}$/i', $password)) {
+        if (preg_match('/^(?=.*[A-Za-z])(?=.*\d)[ -~]{8,72}$/', $password)) {
 
             return true;
         }
@@ -574,4 +573,3 @@ class helper extends db_connect
         }
     }
 }
-
