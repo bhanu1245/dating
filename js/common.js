@@ -29,7 +29,7 @@ App.run = function() {
         success: function(response) {
 
             var data = Api.unwrap(response);
-            if (Api.isOk(response) || data.error === false || response.error === false) {
+            if (Api.isOk(response) || data.error === false) {
 
                 if (data.hasOwnProperty("registrationComplete")) {
                     account.registrationComplete = parseInt(data.registrationComplete, 10) || 0;
@@ -118,7 +118,7 @@ Gallery.add = function (itemImg, itemPreviewImg, itemOriginImg) {
         dataType: 'json',
         success: function(response) {
             var data = Api.unwrap(response);
-            if (Api.isOk(response) || data.error === false || response.error === false) {
+            if (Api.isOk(response) || data.error === false) {
                 var imageUrl = data.imgUrl || itemImg;
                 if ($('div.gallery-item img[src="' + imageUrl + '"]').length) {
                     return;
@@ -127,7 +127,7 @@ Gallery.add = function (itemImg, itemPreviewImg, itemOriginImg) {
                 $('div.gallery-content, div.items-view').first().prepend(html);
                 $('.gallery-empty-state').addClass('hidden');
             } else {
-                $('.gallery-upload-error').text((response && response.msg) ? response.msg : 'Upload failed').removeClass('hidden');
+                $('.gallery-upload-error').text(data.msg || 'Upload failed').removeClass('hidden');
             }
         }
     });
@@ -174,8 +174,8 @@ Item.like = function (itemId, itemType) {
         data: 'accessToken=' + account.accessToken + "&accountId=" + account.id + "&itemId=" + itemId,
         success: function(response){
             var data = Api.unwrap(response);
-            if (data.error === true || response.error === true) {
-                $('.action-error').text(response.msg || 'Request failed').removeClass('hidden');
+            if (data.error === true) {
+                $('.action-error').text(data.msg || 'Request failed').removeClass('hidden');
                 return;
             }
             if (data.myLike) {
@@ -207,10 +207,10 @@ $(document).off('click', '.friend-add-button').on('click', '.friend-add-button',
     var $btn = $(this);
     $.post('/api/' + options.api_version + '/method/friends.sendRequest', {accountId: account.id, accessToken: account.accessToken, profileId: profileId}, function (response) {
         var data = Api.unwrap(response);
-        if (!(data.error === true || response.error === true)) {
+        if (!(data.error === true)) {
             $btn.addClass('disabled').text('Requested');
         } else {
-            $('.action-error').text(response.msg || 'Unable to add friend').removeClass('hidden');
+            alert(data.msg || 'Unable to add friend');
         }
     }, 'json');
 });
@@ -227,14 +227,14 @@ $(document).off('click', '.gift-send-button').on('click', '.gift-send-button', f
     };
     $.post('/api/' + options.api_version + '/method/gifts.send', payload, function (response) {
         var data = Api.unwrap(response);
-        if (!(data.error === true || response.error === true)) {
+        if (!(data.error === true)) {
             if (data.balance !== undefined) {
                 account.balance = data.balance;
                 $('.account-balance').text(data.balance);
             }
             $('.gift-send-status').text('Gift sent').removeClass('hidden');
         } else {
-            $('.gift-send-status').text(response.msg || 'Gift failed').removeClass('hidden');
+            alert(data.msg || 'Gift failed');
         }
     }, 'json');
 });
@@ -246,7 +246,7 @@ $(document).ajaxSuccess(function(event, xhr) {
         var response = JSON.parse(xhr.responseText);
         var payload = Api.unwrap(response);
 
-        if (response && response.error === false && payload && payload.photoUrl) {
+        if (payload && payload.error === false && payload.photoUrl) {
             $("img.main-profile-photo, img.avatar").attr("src", payload.photoUrl + "?t=" + Date.now());
             if (typeof $ !== "undefined") {
                 $('#photoModal').modal('hide');
@@ -254,3 +254,33 @@ $(document).ajaxSuccess(function(event, xhr) {
         }
     } catch (e) {}
 });
+
+window.Spotlight || (window.Spotlight = {});
+
+Spotlight.prepare = function () {
+    $('#spotlight-dlg .loader-content').removeClass('hidden');
+    $('#spotlight-dlg .spotlight-content').html('');
+    $('#spotlight-dlg').modal('show');
+    $.post('/api/' + options.api_version + '/method/settings.get', {accountId: account.id, accessToken: account.accessToken}, function () {
+        $('#spotlight-dlg .loader-content').addClass('hidden');
+    }, 'json');
+};
+
+Spotlight.add = function (btn) {
+    var $btn = $(btn);
+    $btn.prop('disabled', true);
+    $.post('/api/' + options.api_version + '/method/spotlight.add', {accountId: account.id, accessToken: account.accessToken}, function (response) {
+        var data = Api.unwrap(response);
+        if (data.error === true) {
+            alert(data.msg || 'Unable to activate spotlight');
+        } else {
+            if (data.balance !== undefined) $('.account-balance').text(data.balance);
+            $('#spotlight-dlg').modal('hide');
+            $('.action-button[onclick*="Spotlight.prepare"]').prop('disabled', true).addClass('disabled').text('Added');
+        }
+        $btn.prop('disabled', false);
+    }, 'json').fail(function () {
+        alert('Network error');
+        $btn.prop('disabled', false);
+    });
+};

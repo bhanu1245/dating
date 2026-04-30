@@ -9,6 +9,9 @@
  * Copyright 2012-2020 Demyanchuk Dmitry (raccoonsquare@gmail.com)
  */
 
+header('Content-Type: application/json');
+$result = array("error" => true, "msg" => "failed", "data" => new stdClass());
+
 if (!empty($_POST)) {
 
     $accountId = isset($_POST['accountId']) ? $_POST['accountId'] : 0;
@@ -21,10 +24,7 @@ if (!empty($_POST)) {
         api::printError(ERROR_ACCESS_TOKEN, "Error authorization.");
     }
 
-    $result = array(
-        "error" => true,
-        "error_code" => ERROR_UNKNOWN
-    );
+    $resultData = array("error" => true);
 
     $account = new account($dbo, $accountId);
     $accountInfo = $account->get();
@@ -53,11 +53,20 @@ if (!empty($_POST)) {
 
             $spotlight = new spotlight($dbo);
             $spotlight->setRequestFrom($accountId);
-            $result = $spotlight->add($accountId);
+            $resultData = $spotlight->add($accountId);
             unset($spotlight);
         }
     }
-
+    if (isset($resultData['error_code'])) unset($resultData['error_code']);
+    if (!isset($resultData['balance'])) $resultData['balance'] = $account->getBalance();
+    $result = array(
+        "error" => !empty($resultData['error']),
+        "msg" => !empty($resultData['error']) ? "failed" : "success",
+        "data" => $resultData
+    );
     echo json_encode($result);
     exit;
 }
+
+echo json_encode($result);
+exit;

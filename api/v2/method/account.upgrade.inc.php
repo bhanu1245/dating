@@ -7,6 +7,9 @@
  * Copyright 2012-2022 Demyanchuk Dmitry (raccoonsquare@gmail.com)
  */
 
+header('Content-Type: application/json');
+$result = array("error" => true, "msg" => "failed", "data" => new stdClass());
+
 if (!empty($_POST)) {
 
     $accountId = isset($_POST['accountId']) ? $_POST['accountId'] : 0;
@@ -25,10 +28,7 @@ if (!empty($_POST)) {
         api::printError(ERROR_ACCESS_TOKEN, "Error authorization.");
     }
 
-    $result = array(
-        "error" => true,
-        "error_code" => ERROR_UNKNOWN
-    );
+    $resultData = array("error" => true);
 
     $account = new account($dbo, $accountId);
 
@@ -42,7 +42,7 @@ if (!empty($_POST)) {
 
                 $account->setBalance($account->getBalance() - $credits);
 
-                $result = $account->setVerify(1);
+                $resultData = $account->setVerify(1);
 
                 break;
             }
@@ -51,7 +51,7 @@ if (!empty($_POST)) {
 
                 $account->setBalance($account->getBalance() - $credits);
 
-                $result = $account->setGhost(1);
+                $resultData = $account->setGhost(1);
 
                 break;
             }
@@ -60,7 +60,7 @@ if (!empty($_POST)) {
 
                 $account->setBalance($account->getBalance() - $credits);
 
-                $result = $account->setAdmob(1);
+                $resultData = $account->setAdmob(1);
 
                 break;
             }
@@ -69,7 +69,7 @@ if (!empty($_POST)) {
 
                 $account->setBalance($account->getBalance() - $credits);
 
-                $result = $account->setPro(1);
+                $resultData = $account->setPro(1);
 
                 break;
             }
@@ -78,7 +78,7 @@ if (!empty($_POST)) {
 
                 $account->setBalance($account->getBalance() - $credits);
 
-                $result = $account->setFreeMessagesCount($account->getFreeMessagesCount() + 100);
+                $resultData = $account->setFreeMessagesCount($account->getFreeMessagesCount() + 100);
 
                 break;
             }
@@ -89,7 +89,7 @@ if (!empty($_POST)) {
             }
         }
 
-        if (!$result['error']) {
+        if (empty($resultData['error'])) {
 
             $payments = new payments($dbo);
             $payments->setRequestFrom($accountId);
@@ -97,7 +97,17 @@ if (!empty($_POST)) {
             unset($payments);
         }
     }
+    if (isset($resultData['error_code'])) unset($resultData['error_code']);
+    $resultData['balance'] = $account->getBalance();
+    $result = array(
+        "error" => !empty($resultData['error']),
+        "msg" => !empty($resultData['error']) ? "failed" : "success",
+        "data" => $resultData
+    );
 
     echo json_encode($result);
     exit;
 }
+
+echo json_encode($result);
+exit;

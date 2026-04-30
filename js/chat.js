@@ -20,11 +20,6 @@ App.chatRun = function(chat_id, user_id, access_token) {
 
 window.Messages || ( window.Messages = {} );
 
-Messages.unwrap = function (response) {
-    if (response && response.data && typeof response.data === 'object') return response.data;
-    return response || {};
-};
-
 Messages.createInProgress = false;
 
 Messages.updateChat = function (chat_id, chatFromUserId, chatToUserId) {
@@ -39,8 +34,9 @@ Messages.updateChat = function (chat_id, chatFromUserId, chatToUserId) {
         dataType: 'json',
         timeout: 30000,
         success: function(response){
-            if (response.error) {
-                $('.chat-error').text(response.msg || 'Chat sync failed').removeClass('hidden');
+            var data = Api.unwrap(response);
+            if (data.error === true) {
+                $('.chat-error').text(data.msg || 'Chat sync failed').removeClass('hidden');
                 return;
             }
         },
@@ -62,10 +58,10 @@ Messages.update = function (chat_id, user_id, access_token) {
     timeout: 30000,
     success: function(response){
 
-      var data = Messages.unwrap(response);
+      var data = Api.unwrap(response);
 
-      if (response.error) {
-          $('.chat-error').text(response.msg || 'Failed to update chat').removeClass('hidden');
+      if (data.error === true) {
+          $('.chat-error').text(data.msg || 'Failed to update chat').removeClass('hidden');
       } else if (data.hasOwnProperty('html')) {
 
         $("ul.content-list").append(data.html);
@@ -118,9 +114,9 @@ Messages.create = function (chat_id, user_id) {
     timeout: 30000,
     success: function(response){
 
-      var data = Messages.unwrap(response);
+      var data = Api.unwrap(response);
 
-      if (response.error) {
+      if (data.error === true) {
           $('.chat-error').text(response.msg || 'Message failed').removeClass('hidden');
           return;
       }
@@ -182,10 +178,10 @@ Messages.sendSticker = function (chat_id, user_id, stickerId, stickerImgUrl) {
         timeout: 30000,
         success: function(response){
 
-            var data = Messages.unwrap(response);
+            var data = Api.unwrap(response);
 
-            if (data.error === true || response.error === true) {
-                $('.chat-error').text(response.msg || 'Sticker send failed').removeClass('hidden');
+            if (data.error === true) {
+                $('.chat-error').text(data.msg || 'Sticker send failed').removeClass('hidden');
                 return;
             }
 
@@ -228,7 +224,7 @@ Messages.more = function (chat_id, user_id) {
 
         $('header.loading-banner').remove();
 
-      var data = Messages.unwrap(response);
+      var data = Api.unwrap(response);
 
       if (data.hasOwnProperty('html')) {
 
