@@ -39,10 +39,13 @@ if (!empty($_POST)) {
     $profile = new profile($dbo, $profileId);
     $profile->setRequestFrom($accountId);
 
-    $result = $profile->addFollower($accountId);
-
-    if (isset($result['error_code'])) unset($result['error_code']);
-    if (!$result['error']) $result = array('error' => false, 'msg' => 'success', 'data' => $result);
+    $resultData = $profile->addFollower($accountId);
+    if (isset($resultData['error_code'])) unset($resultData['error_code']);
+    $result = array(
+        'error' => !empty($resultData['error']),
+        'msg' => !empty($resultData['error']) ? 'failed' : 'success',
+        'data' => $resultData
+    );
     echo json_encode($result);
     exit;
 }

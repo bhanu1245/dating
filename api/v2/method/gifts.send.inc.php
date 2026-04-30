@@ -93,15 +93,12 @@ if (!empty($_POST)) {
         }
     }
 
-    if (isset($result['error_code'])) {
-        unset($result['error_code']);
-    }
-    if (!$result['error']) {
-        $result['msg'] = 'success';
-        $result = array('error' => false, 'msg' => 'success', 'data' => $result);
-    } else {
-        $result['msg'] = isset($result['msg']) ? $result['msg'] : 'failed';
-    }
+    if (isset($result['error_code'])) unset($result['error_code']);
+    $result = array(
+        'error' => !empty($result['error']),
+        'msg' => !empty($result['error']) ? (isset($result['msg']) ? $result['msg'] : 'failed') : 'success',
+        'data' => $result
+    );
 
     echo json_encode($result);
     exit;

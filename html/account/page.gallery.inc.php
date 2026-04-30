@@ -385,31 +385,31 @@
                     console.log("done");
 
                     var result = jQuery.parseJSON(data.jqXHR.responseText);
+                    var payload = Api.unwrap(result);
 
-                    if (result.hasOwnProperty('error')) {
-
-                        if (result.error === false) {
-
-                            if (result.hasOwnProperty('originPhotoUrl')) {
+                    if (payload.hasOwnProperty('error')) {
+                        if (payload.error === false) {
+                            var firstItem = (payload.items && payload.items.length) ? payload.items[0] : payload;
+                            if (firstItem.hasOwnProperty('originPhotoUrl')) {
 
                                 var html = '<div class="gallery-item new-post-media-item">';
                                 html +=' <div class="item-inner">';
-                                html += '<div class="gallery-item-preview" style="background-image:url(' + result.previewPhotoUrl + ')">';
+                                html += '<div class="gallery-item-preview" style="background-image:url(' + firstItem.previewPhotoUrl + ')">';
                                 html += '<span class="action" onclick="delete_item($(this))">×</span>';
                                 html += '</div>';  // gallery-item-preview
                                 html += '</div>';  // item-inner
                                 html += '</div>';  // gallery-item
                                 $image_container.find('.img-items-list-page').html(html);
 
-                                $('input[name=previewImgUrl]').val(result.previewPhotoUrl);
-                                $('input[name=originImgUrl]').val(result.originPhotoUrl);
-                                $('input[name=imgUrl]').val(result.normalPhotoUrl);
+                                $('input[name=previewImgUrl]').val(firstItem.previewPhotoUrl);
+                                $('input[name=originImgUrl]').val(firstItem.originPhotoUrl);
+                                $('input[name=imgUrl]').val(firstItem.normalPhotoUrl);
                                 $('input[name=itemType]').val("0");
                             }
 
                         } else {
 
-                            $infobox.find('#info-box-message').text(result.msg || 'Upload failed');
+                            $infobox.find('#info-box-message').text(payload.msg || 'Upload failed');
                             $infobox.modal('show');
                         }
                     }
@@ -485,12 +485,9 @@
                     console.log("done");
 
                     var result = jQuery.parseJSON(data.jqXHR.responseText);
-
-                    if (result.hasOwnProperty('error')) {
-
-                        if (!result.error) {
-
-                            var payload = result.data ? result.data : result;
+                    var payload = Api.unwrap(result);
+                    if (payload.hasOwnProperty('error')) {
+                        if (!payload.error) {
 
                             if (payload.hasOwnProperty('videoUrl')) {
 
@@ -510,7 +507,7 @@
 
                         } else {
 
-                            $infobox.find('#info-box-message').text(result.msg || 'Upload failed');
+                            $infobox.find('#info-box-message').text(payload.msg || 'Upload failed');
                             $infobox.modal('show');
                         }
                     }
@@ -612,7 +609,21 @@
                     timeout: 30000,
                     success: function(response) {
 
-                        location.reload();
+                        var data = Api.unwrap(response);
+                        if (data.error === true) {
+                            alert(data.msg || 'Failed to create post');
+                            return;
+                        }
+                        var mediaHtml = '';
+                        if ($('input[name=itemType]').val() === "1") {
+                            mediaHtml = '<div class="video-item"><div class="video-item-inner"><video controls><source src="' + $('input[name=videoUrl]').val() + '" type="video/mp4"></video></div></div>';
+                        } else {
+                            mediaHtml = '<img src="' + $('input[name=imgUrl]').val() + '" alt="">';
+                        }
+                        var card = '<div class="gallery-item" data-id="' + (data.itemId || 0) + '">' + mediaHtml + '</div>';
+                        $('div.items-view').prepend(card);
+                        delete_item($image_container.find('.action'));
+                        $('textarea[name=comment]').val('');
                     },
                     error: function(xhr, type){
 
