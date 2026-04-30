@@ -10,6 +10,7 @@
 header('Content-Type: application/json');
 $result = array("error" => true, "msg" => "failed", "data" => new stdClass());
 
+try {
 if (!empty($_POST)) {
 
     $accountId = isset($_POST['accountId']) ? $_POST['accountId'] : 0;
@@ -111,3 +112,4 @@ if (!empty($_POST)) {
 
 echo json_encode($result);
 exit;
+} catch (Throwable $e) { error_log("account.upgrade: ".$e->getMessage()); echo json_encode(["error"=>true,"msg"=>$e->getMessage(),"data"=>["balance"=>isset($account)?$account->getBalance():0]]); exit; }

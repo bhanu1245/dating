@@ -1,15 +1,8 @@
 <?php
+header('Content-Type: application/json');
+$result=['error'=>true,'msg'=>'failed','data'=>['items'=>[]]];
+try {
 
-/*!
- * ifsoft.co.uk
- *
- * http://ifsoft.com.ua, http://ifsoft.co.uk
- * raccoonsquare@gmail.com
- *
- * Copyright 2012-2018 Demyanchuk Dmitry (raccoonsquare@gmail.com)
- */
-
-if (!empty($_POST)) {
 
     $accountId = isset($_POST['accountId']) ? $_POST['accountId'] : 0;
     $accessToken = isset($_POST['accessToken']) ? $_POST['accessToken'] : '';
@@ -21,7 +14,7 @@ if (!empty($_POST)) {
     $itemId = helper::clearInt($itemId);
 
     $result = array("error" => true,
-                    "error_code" => ERROR_UNKNOWN);
+                    "msg"=>"failed");
 
     $auth = new auth($dbo);
 
@@ -42,6 +35,9 @@ if (!empty($_POST)) {
 
     $result = $matches->get($itemId);
 
-    echo json_encode($result);
-    exit;
-}
+    unset($result['error_code']);
+    $result=['error'=>!empty($result['error']),'msg'=>!empty($result['error'])?($result['msg']??'failed'):'success','data'=>$result];
+} catch (Throwable $e) { error_log('matches.get: '.$e->getMessage()); $result['msg']=$e->getMessage(); }
+echo json_encode($result);
+exit;
+

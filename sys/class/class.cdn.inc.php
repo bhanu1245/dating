@@ -39,6 +39,10 @@ class cdn extends db_connect
         $target = $baseDir.$fileName;
 
         if (@copy($filePath, $target)) {
+            @chmod($target, 0644);
+        }
+
+        if (is_file($target) && is_readable($target)) {
             $result['error'] = false;
             $result['msg'] = 'success';
             $result['fileUrl'] = APP_URL.'/'.trim($folder, '/').'/'.$fileName;
