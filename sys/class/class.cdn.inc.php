@@ -7,7 +7,6 @@ class cdn extends db_connect
         parent::__construct($dbo);
     }
 
-    // 🔥 CORE LOCAL UPLOAD FUNCTION
     private function saveLocal($filePath, $folder)
     {
         $result = array(
@@ -16,22 +15,23 @@ class cdn extends db_connect
             "fileUrl" => ""
         );
 
-        $baseDir = $_SERVER['DOCUMENT_ROOT'] . "/" . $folder;
+        $baseDir = rtrim($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 2), '/').'/'.trim($folder, '/').'/';
 
-        // Create folder if not exists
-        if (!file_exists($baseDir)) {
-            mkdir($baseDir, 0777, true);
+        if (!is_dir($baseDir) && !@mkdir($baseDir, 0775, true)) {
+            return $result;
+        }
+
+        if (!is_writable($baseDir)) {
+            return $result;
         }
 
         $fileName = basename($filePath);
-        $target = $baseDir . $fileName;
+        $target = $baseDir.$fileName;
 
-        if (copy($filePath, $target)) {
-
+        if (@copy($filePath, $target)) {
             $result['error'] = false;
             $result['error_code'] = ERROR_SUCCESS;
-            $result['fileUrl'] = APP_URL . "/" . $folder . $fileName;
-
+            $result['fileUrl'] = APP_URL.'/'.trim($folder, '/').'/'.$fileName;
         }
 
         @unlink($filePath);
@@ -39,33 +39,9 @@ class cdn extends db_connect
         return $result;
     }
 
-    // PROFILE PHOTO
-    public function uploadPhoto($imgFilename)
-    {
-        return $this->saveLocal($imgFilename, "uploads/photos/");
-    }
-
-    // COVER PHOTO
-    public function uploadCover($imgFilename)
-    {
-        return $this->saveLocal($imgFilename, "uploads/covers/");
-    }
-
-    // GALLERY PHOTO
-    public function uploadMyPhoto($imgFilename)
-    {
-        return $this->saveLocal($imgFilename, "uploads/gallery/");
-    }
-
-    // CHAT IMAGE
-    public function uploadChatImg($imgFilename)
-    {
-        return $this->saveLocal($imgFilename, "uploads/chat/");
-    }
-
-    // VIDEO
-    public function uploadVideo($imgFilename)
-    {
-        return $this->saveLocal($imgFilename, "uploads/videos/");
-    }
+    public function uploadPhoto($imgFilename) { return $this->saveLocal($imgFilename, PHOTO_PATH); }
+    public function uploadCover($imgFilename) { return $this->saveLocal($imgFilename, COVER_PATH); }
+    public function uploadMyPhoto($imgFilename) { return $this->saveLocal($imgFilename, MY_PHOTOS_PATH); }
+    public function uploadChatImg($imgFilename) { return $this->saveLocal($imgFilename, CHAT_IMAGE_PATH); }
+    public function uploadVideo($imgFilename) { return $this->saveLocal($imgFilename, VIDEO_PATH); }
 }
