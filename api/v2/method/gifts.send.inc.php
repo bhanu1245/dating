@@ -15,6 +15,10 @@ if (!defined("APP_SIGNATURE")) {
     exit;
 }
 
+header('Content-Type: application/json');
+
+$result = array("error" => true, "msg" => "failed", "data" => new stdClass());
+
 if (!empty($_POST)) {
 
     $clientId = isset($_POST['clientId']) ? $_POST['clientId'] : 0;
@@ -42,11 +46,6 @@ if (!empty($_POST)) {
 
     $message = helper::escapeText($message);
 
-    $result = array(
-        "error" => true,
-        "error_code" => ERROR_UNKNOWN
-    );
-
     $auth = new auth($dbo);
 
     if (!$auth->authorize($accountId, $accessToken)) {
@@ -56,7 +55,8 @@ if (!empty($_POST)) {
 
     if ($accountId == $giftTo) {
 
-        return $result;
+        echo json_encode($result);
+        exit;
     }
 
     $gift = new gift($dbo);
@@ -93,6 +93,19 @@ if (!empty($_POST)) {
         }
     }
 
+    if (isset($result['error_code'])) {
+        unset($result['error_code']);
+    }
+    if (!$result['error']) {
+        $result['msg'] = 'success';
+        $result = array('error' => false, 'msg' => 'success', 'data' => $result);
+    } else {
+        $result['msg'] = isset($result['msg']) ? $result['msg'] : 'failed';
+    }
+
     echo json_encode($result);
     exit;
 }
+
+echo json_encode($result);
+exit;

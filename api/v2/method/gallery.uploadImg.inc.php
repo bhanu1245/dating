@@ -1,7 +1,7 @@
 <?php
 if (!defined("APP_SIGNATURE")) { header("Location: /"); exit; }
 header('Content-Type: application/json');
-$result=["error"=>true,"error_code"=>ERROR_UNKNOWN,"error_description"=>"Unknown error","items"=>[]];
+$result=["error"=>true,"msg"=>"failed","data"=>["items"=>[]]];
 try {
  if (empty($_POST)) throw new Exception('Empty request');
  $accountId=helper::clearInt($_POST['accountId']??0); $accessToken=helper::escapeText(helper::clearText($_POST['accessToken']??''));
@@ -14,9 +14,9 @@ try {
    $tmp=is_array($files['tmp_name'])?$files['tmp_name'][$i]:$files['tmp_name'];
    $name=is_array($files['name'])?$files['name'][$i]:$files['name'];
    if(!$imglib->isImageFile($tmp,true,false)) continue;
-   $r=$imglib->createMyPhoto($tmp,$name); if(!$r['error']) $result['items'][]=$r;
+   $r=$imglib->createMyPhoto($tmp,$name); if(!$r['error']) $result['data']['items'][]=$r;
  }
- if(!count($result['items'])) throw new Exception('No valid images uploaded');
- $result['error']=false; $result['error_code']=ERROR_SUCCESS; $result['error_description']='ok';
-} catch (Throwable $e){ $result['error']=true; $result['error_description']=$e->getMessage(); }
+ if(!count($result['data']['items'])) throw new Exception('No valid images uploaded');
+ $result['error']=false; $result['msg']='success';
+} catch (Throwable $e){ $result['error']=true; $result['msg']=$e->getMessage(); }
 echo json_encode($result); exit;

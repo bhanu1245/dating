@@ -9,6 +9,10 @@
  * Copyright 2012-2019 Demyanchuk Dmitry (raccoonsquare@gmail.com)
  */
 
+header('Content-Type: application/json');
+
+$result = array("error" => true, "msg" => "failed", "data" => new stdClass());
+
 if (!empty($_POST)) {
 
     $accountId = isset($_POST['accountId']) ? $_POST['accountId'] : 0;
@@ -16,10 +20,8 @@ if (!empty($_POST)) {
 
     $profileId = isset($_POST['profileId']) ? $_POST['profileId'] : 0;
 
+    $accountId = helper::clearInt($accountId);
     $profileId = helper::clearInt($profileId);
-
-    $result = array("error" => true,
-                    "error_code" => ERROR_UNKNOWN);
 
     $auth = new auth($dbo);
 
@@ -39,6 +41,11 @@ if (!empty($_POST)) {
 
     $result = $profile->addFollower($accountId);
 
+    if (isset($result['error_code'])) unset($result['error_code']);
+    if (!$result['error']) $result = array('error' => false, 'msg' => 'success', 'data' => $result);
     echo json_encode($result);
     exit;
 }
+
+echo json_encode($result);
+exit;

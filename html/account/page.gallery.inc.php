@@ -409,7 +409,7 @@
 
                         } else {
 
-                            $infobox.find('#info-box-message').text(result.error_description);
+                            $infobox.find('#info-box-message').text(result.msg || 'Upload failed');
                             $infobox.modal('show');
                         }
                     }
@@ -490,25 +490,27 @@
 
                         if (!result.error) {
 
-                            if (result.hasOwnProperty('videoFileUrl')) {
+                            var payload = result.data ? result.data : result;
+
+                            if (payload.hasOwnProperty('videoUrl')) {
 
                                 var html = '<div class="video-item new-post-media-item">';
                                 html +=' <div class="video-item-inner">';
                                 html += '<span class="action" onclick="delete_item($(this))">×</span>';
                                 html += '<video controls="">';
-                                html += '<source src="' + result.videoFileUrl + '" type="video/mp4">';
+                                html += '<source src="' + payload.videoUrl + '" type="' + (payload.videoMimeType || 'video/mp4') + '">';
                                 html += '</video>';  // video
                                 html += '</div>';  // video-item-inner
                                 html += '</div>';  // video-item
                                 $image_container.find('.img-items-list-page').html(html);
 
                                 $('input[name=itemType]').val("1");
-                                $('input[name=videoUrl]').val(result.videoFileUrl);
+                                $('input[name=videoUrl]').val(payload.videoUrl);
                             }
 
                         } else {
 
-                            $infobox.find('#info-box-message').text(result.error_description);
+                            $infobox.find('#info-box-message').text(result.msg || 'Upload failed');
                             $infobox.modal('show');
                         }
                     }

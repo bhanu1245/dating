@@ -7,7 +7,7 @@ if (!defined("APP_SIGNATURE")) {
 
 header('Content-Type: application/json');
 
-$result = ["error" => true, "error_code" => ERROR_UNKNOWN, "error_description" => "Unknown error"];
+$result = ["error" => true, "msg" => "failed", "data" => new stdClass()];
 
 try {
     if (empty($_POST)) {
@@ -39,9 +39,9 @@ try {
 
     $profile = new profile($dbo, $accountId);
     $profileInfo = $profile->getVeryShort();
-    @unlink(PHOTO_PATH.'/'.basename($profileInfo['normalPhotoUrl']));
-    @unlink(PHOTO_PATH.'/'.basename($profileInfo['bigPhotoUrl']));
-    @unlink(PHOTO_PATH.'/'.basename($profileInfo['lowPhotoUrl']));
+    @unlink(rtrim($_SERVER['DOCUMENT_ROOT'], '/').'/'.trim(PHOTO_PATH, '/').'/'.basename($profileInfo['normalPhotoUrl']));
+    @unlink(rtrim($_SERVER['DOCUMENT_ROOT'], '/').'/'.trim(PHOTO_PATH, '/').'/'.basename($profileInfo['bigPhotoUrl']));
+    @unlink(rtrim($_SERVER['DOCUMENT_ROOT'], '/').'/'.trim(PHOTO_PATH, '/').'/'.basename($profileInfo['lowPhotoUrl']));
 
     $account = new account($dbo, $accountId);
     $account->setPhoto($upload);
@@ -54,18 +54,19 @@ try {
 
     $result = [
         "error" => false,
-        "error_code" => ERROR_SUCCESS,
-        "error_description" => "ok",
-        "originPhotoUrl" => $upload['originPhotoUrl'],
-        "normalPhotoUrl" => $upload['normalPhotoUrl'],
-        "bigPhotoUrl" => $upload['bigPhotoUrl'],
-        "lowPhotoUrl" => $upload['lowPhotoUrl'],
-        "photoUrl" => $upload['normalPhotoUrl'],
-        "registrationComplete" => 1
+        "msg" => "success",
+        "data" => [
+            "originPhotoUrl" => $upload['originPhotoUrl'],
+            "normalPhotoUrl" => $upload['normalPhotoUrl'],
+            "bigPhotoUrl" => $upload['bigPhotoUrl'],
+            "lowPhotoUrl" => $upload['lowPhotoUrl'],
+            "photoUrl" => $upload['normalPhotoUrl'],
+            "registrationComplete" => 1
+        ]
     ];
 } catch (Throwable $e) {
     $result['error'] = true;
-    $result['error_description'] = $e->getMessage();
+    $result['msg'] = $e->getMessage();
 }
 
 echo json_encode($result);

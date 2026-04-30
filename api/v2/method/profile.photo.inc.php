@@ -11,6 +11,7 @@ try {
     require_once dirname(__DIR__, 3) . '/sys/class/class.helper.inc.php';
     require_once dirname(__DIR__, 3) . '/sys/class/class.auth.inc.php';
     require_once dirname(__DIR__, 3) . '/sys/class/class.account.inc.php';
+    require_once dirname(__DIR__, 3) . '/sys/class/class.cdn.inc.php';
 
     if (session_status() === PHP_SESSION_NONE) {
         @session_start();
@@ -40,8 +41,12 @@ try {
         $ext = "jpg";
     }
 
+    $imageType = helper::clearInt($_POST['imageType'] ?? 0);
+    $isCoverUpload = ($imageType === 1);
+    $targetPath = $isCoverUpload ? COVER_PATH : PHOTO_PATH;
+
     // ✅ Upload directory
-    $upload_dir = dirname(__DIR__, 3) . "/uploads/photos/";
+    $upload_dir = rtrim($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 3), '/').'/'.trim($targetPath, '/').'/';
 
     if (!file_exists($upload_dir)) {
         if (!mkdir($upload_dir, 0755, true)) {
@@ -79,37 +84,49 @@ try {
         throw new Exception("Authorization failed");
     }
 
-    $photo_url = "/uploads/photos/" . $file_name;
+    $photo_url = APP_URL . "/" . trim($targetPath, '/') . "/" . $file_name;
 
-    $stmt = $dbo->prepare("
-    UPDATE users 
-    SET 
-        lowPhotoUrl = ?, 
-        normalPhotoUrl = ?, 
-        bigPhotoUrl = ?, 
-        registrationComplete = 1
-    WHERE id = ?
-    ");
-
-    $stmt->execute([$photo_url, $photo_url, $photo_url, $accountId]);
+    $account = new account($dbo, $accountId);
+    if ($isCoverUpload) {
+        $account->setCover([
+            'originCoverUrl' => $photo_url,
+            'normalCoverUrl' => $photo_url
+        ]);
+    } else {
+        $account->setPhoto([
+            'originPhotoUrl' => $photo_url,
+            'normalPhotoUrl' => $photo_url,
+            'bigPhotoUrl' => $photo_url,
+            'lowPhotoUrl' => $photo_url
+        ]);
+        $account->setRegistrationComplete(1);
+    }
 
     if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id']) && intval($_SESSION['user_id']) === $accountId) {
 
-        auth::setCurrentUserPhotoUrl($photo_url);
-        auth::setRegistrationComplete(1);
+        if (!$isCoverUpload) {
+            auth::setCurrentUserPhotoUrl($photo_url);
+            auth::setRegistrationComplete(1);
+        }
     }
 
     ob_end_clean();
 
     echo json_encode([
         "error" => false,
-        "msg" => "Upload success",
-        "photoUrl" => $photo_url,
-        "originPhotoUrl" => $photo_url,
-        "normalPhotoUrl" => $photo_url,
-        "bigPhotoUrl" => $photo_url,
-        "lowPhotoUrl" => $photo_url,
-        "registrationComplete" => 1
+        "msg" => "success",
+        "data" => $isCoverUpload ? [
+            "coverUrl" => $photo_url,
+            "originCoverUrl" => $photo_url,
+            "normalCoverUrl" => $photo_url
+        ] : [
+            "photoUrl" => $photo_url,
+            "originPhotoUrl" => $photo_url,
+            "normalPhotoUrl" => $photo_url,
+            "bigPhotoUrl" => $photo_url,
+            "lowPhotoUrl" => $photo_url,
+            "registrationComplete" => 1
+        ]
     ]);
 
 } catch (Throwable $e) {
@@ -118,7 +135,8 @@ try {
 
     echo json_encode([
         "error" => true,
-        "msg" => $e->getMessage()
+        "msg" => $e->getMessage(),
+        "data" => new stdClass()
     ]);
 }
 

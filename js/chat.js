@@ -20,16 +20,29 @@ App.chatRun = function(chat_id, user_id, access_token) {
 
 window.Messages || ( window.Messages = {} );
 
+Messages.unwrap = function (response) {
+    if (response && response.data && typeof response.data === 'object') return response.data;
+    return response || {};
+};
+
+Messages.createInProgress = false;
+
 Messages.updateChat = function (chat_id, chatFromUserId, chatToUserId) {
 
-    $.ajax({
+    if (Messages.createInProgress) { return; }
+  Messages.createInProgress = true;
+
+  $.ajax({
         type: 'POST',
         url: '/api/' + options.api_version + '/method/chat.update',
         data: 'accessToken=' + account.accessToken + "&accountId=" + account.id + "&chatId=" + chat_id + "&chatFromUserId=" + chatFromUserId + "&chatToUserId=" + chatToUserId,
         dataType: 'json',
         timeout: 30000,
         success: function(response){
-
+            if (response.error) {
+                $('.chat-error').text(response.msg || 'Chat sync failed').removeClass('hidden');
+                return;
+            }
         },
         error: function(xhr, status, error) {
 
@@ -49,9 +62,13 @@ Messages.update = function (chat_id, user_id, access_token) {
     timeout: 30000,
     success: function(response){
 
-      if (response.hasOwnProperty('html')) {
+      var data = Messages.unwrap(response);
 
-        $("ul.content-list").append(response.html);
+      if (response.error) {
+          $('.chat-error').text(response.msg || 'Failed to update chat').removeClass('hidden');
+      } else if (data.hasOwnProperty('html')) {
+
+        $("ul.content-list").append(data.html);
 
           if (chat_from_user_id != 0 && chat_to_user_id != 0) {
 
@@ -59,9 +76,9 @@ Messages.update = function (chat_id, user_id, access_token) {
           }
       }
 
-      if (response.hasOwnProperty('items_all')) {
+      if (data.hasOwnProperty('items_all')) {
 
-        items_all = response.items_all;
+        items_all = data.items_all;
         items_loaded = $('li.message-item').length;
       }
 
@@ -101,27 +118,26 @@ Messages.create = function (chat_id, user_id) {
     timeout: 30000,
     success: function(response){
 
-        if (response.hasOwnProperty('error_code')) {
+      var data = Messages.unwrap(response);
 
-            if (response.error_code == 506) {
+      if (response.error) {
+          $('.chat-error').text(response.msg || 'Message failed').removeClass('hidden');
+          return;
+      }
 
-                $('#otp-verification-dlg').modal('show');
-            }
-        }
-
-        if (response.hasOwnProperty('promode')) {
+      if (data.hasOwnProperty('promode')) {
 
             $('#pro-mode-dlg').modal('show');
-        }
+      }
 
-      if (response.hasOwnProperty('html')) {
+      if (data.hasOwnProperty('html')) {
 
           if ($(".empty-list-banner").length) {
 
               $(".empty-list-banner").remove();
           }
 
-        $("ul.content-list").append(response.html);
+        $("ul.content-list").append(data.html);
         $("input[name=message_text]").val("");
 
 
@@ -130,22 +146,25 @@ Messages.create = function (chat_id, user_id) {
           $('div.image-upload-button').removeClass('hidden');
           $("input[name=message_image]").val("");
 
-          if (response.hasOwnProperty('chat_id') && chat_id == 0) {
+          if (data.hasOwnProperty('chat_id') && chat_id == 0) {
 
-              chat_id = response.chat_id;
+              chat_id = data.chat_id;
               App.chatInit(chat_id, user_id, account.accessToken);
           }
       }
 
-      if (response.hasOwnProperty('items_all')) {
+      if (data.hasOwnProperty('items_all')) {
 
-        items_all = response.items_all;
+        items_all = data.items_all;
         items_loaded = $('li.message-item').length;
       }
     },
     error: function(xhr, type){
 
-        alert(type.toString());
+        $('.chat-error').text('Network error').removeClass('hidden');
+    },
+    complete: function(){
+        Messages.createInProgress = false;
     }
   });
 };
@@ -163,27 +182,26 @@ Messages.sendSticker = function (chat_id, user_id, stickerId, stickerImgUrl) {
         timeout: 30000,
         success: function(response){
 
-            if (response.hasOwnProperty('error_code')) {
+            var data = Messages.unwrap(response);
 
-                if (response.error_code == 506) {
-
-                    $('#otp-verification-dlg').modal('show');
-                }
+            if (data.error === true || response.error === true) {
+                $('.chat-error').text(response.msg || 'Sticker send failed').removeClass('hidden');
+                return;
             }
 
-            if (response.hasOwnProperty('html')) {
+      if (data.hasOwnProperty('html')) {
 
                 if ($(".empty-list-banner").length) {
 
                     $(".empty-list-banner").remove();
                 }
 
-                $("ul.content-list").append(response.html);
+                $("ul.content-list").append(data.html);
             }
 
-            if (response.hasOwnProperty('items_all')) {
+            if (data.hasOwnProperty('items_all')) {
 
-                items_all = response.items_all;
+                items_all = data.items_all;
                 items_loaded = $('li.message-item').length;
             }
         },
@@ -210,19 +228,21 @@ Messages.more = function (chat_id, user_id) {
 
         $('header.loading-banner').remove();
 
-      if (response.hasOwnProperty('html')) {
+      var data = Messages.unwrap(response);
 
-        $("ul.content-list").prepend(response.html);
+      if (data.hasOwnProperty('html')) {
+
+        $("ul.content-list").prepend(data.html);
       }
 
-      if (response.hasOwnProperty('html2')) {
+      if (data.hasOwnProperty('html2')) {
 
-        $("div.content-list-page").prepend(response.html2);
+        $("div.content-list-page").prepend(data.html2);
       }
 
-      if (response.hasOwnProperty('items_all')) {
+      if (data.hasOwnProperty('items_all')) {
 
-        items_all = response.items_all;
+        items_all = data.items_all;
         items_loaded = $('li.message-item').length;
       }
     },
@@ -288,10 +308,12 @@ Messages.changeChatImg = function(title, accountId, accessToken) {
 
                         $.colorbox.close();
 
-                        if (response.hasOwnProperty('imgUrl')) {
+                        var data = Messages.unwrap(response);
 
-                            $("input[name=message_image]").val(response.imgUrl);
-                            $("img.msg_img_preview").attr("src", response.imgUrl);
+                        if (data.hasOwnProperty('imgUrl')) {
+
+                            $("input[name=message_image]").val(data.imgUrl);
+                            $("img.msg_img_preview").attr("src", data.imgUrl);
                         }
                     }
                 }
@@ -307,3 +329,8 @@ Messages.changeChatImg = function(title, accountId, accessToken) {
         });
     }});
 };
+
+$(document).off('click', '.message-send-button').on('click', '.message-send-button', function (e) {
+    e.preventDefault();
+    Messages.create(typeof chat_id !== 'undefined' ? chat_id : 0, $(this).data('user-id') || 0);
+});
