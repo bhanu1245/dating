@@ -166,6 +166,18 @@ Items.more = function (url, offset) {
 
 window.Item || ( window.Item = {} );
 
+function showActionError(message) {
+    $('.action-error').text(message || 'Request failed').removeClass('hidden');
+}
+
+function updateBalanceUI(balanceValue) {
+    if (balanceValue === undefined || balanceValue === null || balanceValue === '') return;
+
+    account.balance = balanceValue;
+    $('.account-balance').text(balanceValue);
+    $('.balance').text(balanceValue);
+}
+
 Item.like = function (itemId, itemType) {
 
     $.ajax({
@@ -207,12 +219,15 @@ $(document).off('click', '.friend-add-button').on('click', '.friend-add-button',
     var $btn = $(this);
     $.post('/api/' + options.api_version + '/method/friends.sendRequest', {accountId: account.id, accessToken: account.accessToken, profileId: profileId}, function (response) {
         var data = Api.unwrap(response);
-        if (!(data.error === true)) {
-            $btn.addClass('disabled').text('Requested');
+        if (data && data.error !== true) {
+            $btn.addClass('disabled active').prop('disabled', true).text('Requested');
+            showActionError('');
         } else {
-            alert(data.msg || 'Unable to add friend');
+            showActionError((data && data.msg) || 'Unable to add friend');
         }
-    }, 'json');
+    }, 'json').fail(function () {
+        showActionError('Unable to add friend: network error');
+    });
 });
 
 $(document).off('click', '.gift-send-button').on('click', '.gift-send-button', function (e) {
@@ -227,16 +242,17 @@ $(document).off('click', '.gift-send-button').on('click', '.gift-send-button', f
     };
     $.post('/api/' + options.api_version + '/method/gifts.send', payload, function (response) {
         var data = Api.unwrap(response);
-        if (!(data.error === true)) {
-            if (data.balance !== undefined) {
-                account.balance = data.balance;
-                $('.account-balance').text(data.balance);
-            }
+        if (data && data.error !== true) {
+            updateBalanceUI(data.balance);
             $('.gift-send-status').text('Gift sent').removeClass('hidden');
+            $('.gift-send-button').prop('disabled', true).addClass('disabled');
+            showActionError('');
         } else {
-            alert(data.msg || 'Gift failed');
+            showActionError((data && data.msg) || 'Gift failed');
         }
-    }, 'json');
+    }, 'json').fail(function () {
+        showActionError('Gift failed: network error');
+    });
 });
 
 
@@ -271,16 +287,17 @@ Spotlight.add = function (btn) {
     $btn.prop('disabled', true);
     $.post('/api/' + options.api_version + '/method/spotlight.add', {accountId: account.id, accessToken: account.accessToken}, function (response) {
         var data = Api.unwrap(response);
-        if (data.error === true) {
-            alert(data.msg || 'Unable to activate spotlight');
+        if (!data || data.error === true) {
+            showActionError((data && data.msg) || 'Unable to activate spotlight');
         } else {
-            if (data.balance !== undefined) $('.account-balance').text(data.balance);
+            updateBalanceUI(data.balance);
             $('#spotlight-dlg').modal('hide');
             $('.action-button[onclick*="Spotlight.prepare"]').prop('disabled', true).addClass('disabled').text('Added');
+            showActionError('');
         }
         $btn.prop('disabled', false);
     }, 'json').fail(function () {
-        alert('Network error');
+        showActionError('Unable to activate spotlight: network error');
         $btn.prop('disabled', false);
     });
 };
