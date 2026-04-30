@@ -34,8 +34,9 @@ Messages.updateChat = function (chat_id, chatFromUserId, chatToUserId) {
         dataType: 'json',
         timeout: 30000,
         success: function(response){
-            var data = Api.unwrap(response);
-            if (data.error === true) {
+            var res = Api.unwrap(response);
+            var data = res.data || {};
+            if (res.error) {
                 $('.chat-error').text(data.msg || 'Chat sync failed').removeClass('hidden');
                 return;
             }
@@ -58,9 +59,10 @@ Messages.update = function (chat_id, user_id, access_token) {
     timeout: 30000,
     success: function(response){
 
-      var data = Api.unwrap(response);
+      var res = Api.unwrap(response);
+            var data = res.data || {};
 
-      if (data.error === true) {
+      if (res.error) {
           $('.chat-error').text(data.msg || 'Failed to update chat').removeClass('hidden');
       } else if (data.hasOwnProperty('html')) {
 
@@ -114,10 +116,11 @@ Messages.create = function (chat_id, user_id) {
     timeout: 30000,
     success: function(response){
 
-      var data = Api.unwrap(response);
+      var res = Api.unwrap(response);
+            var data = res.data || {};
 
-      if (data.error === true) {
-          $('.chat-error').text(response.msg || 'Message failed').removeClass('hidden');
+      if (res.error) {
+          $('.chat-error').text(res.msg || 'Message failed').removeClass('hidden');
           return;
       }
 
@@ -178,9 +181,10 @@ Messages.sendSticker = function (chat_id, user_id, stickerId, stickerImgUrl) {
         timeout: 30000,
         success: function(response){
 
-            var data = Api.unwrap(response);
+            var res = Api.unwrap(response);
+            var data = res.data || {};
 
-            if (data.error === true) {
+            if (res.error) {
                 $('.chat-error').text(data.msg || 'Sticker send failed').removeClass('hidden');
                 return;
             }
@@ -224,7 +228,8 @@ Messages.more = function (chat_id, user_id) {
 
         $('header.loading-banner').remove();
 
-      var data = Api.unwrap(response);
+      var res = Api.unwrap(response);
+            var data = res.data || {};
 
       if (data.hasOwnProperty('html')) {
 

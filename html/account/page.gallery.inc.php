@@ -384,27 +384,27 @@
 
                     console.log("done");
 
-                    var result = data && data.jqXHR ? jQuery.parseJSON(data.jqXHR.responseText) : {};
-                    var payload = Api.unwrap(result) || {};
-
-                    if (payload.hasOwnProperty('error')) {
-                        if (payload.error === false) {
-                            var items = Array.isArray(payload.items) ? payload.items : [];
-                            var firstItem = items.length ? items[0] : payload;
-                            if (firstItem && firstItem.hasOwnProperty('originPhotoUrl')) {
+                    var response = data && data.result ? data.result : (data && data.jqXHR ? jQuery.parseJSON(data.jqXHR.responseText) : {});
+                    const res = Api.unwrap(response);
+                    if (!res.error) {
+                            const item = res.data.items && res.data.items[0];
+                            if (item && (item.originUrl || item.originPhotoUrl)) {
+                                const previewUrl = item.previewUrl || item.previewPhotoUrl || item.normalUrl || item.normalPhotoUrl || item.originUrl || item.originPhotoUrl;
+                                const normalUrl = item.normalUrl || item.normalPhotoUrl || previewUrl;
+                                const originUrl = item.originUrl || item.originPhotoUrl || normalUrl;
 
                                 var html = '<div class="gallery-item new-post-media-item">';
                                 html +=' <div class="item-inner">';
-                                html += '<div class="gallery-item-preview" style="background-image:url(' + firstItem.previewPhotoUrl + ')">';
+                                html += '<div class="gallery-item-preview" style="background-image:url(' + previewUrl + ')">';
                                 html += '<span class="action" onclick="delete_item($(this))">×</span>';
                                 html += '</div>';  // gallery-item-preview
                                 html += '</div>';  // item-inner
                                 html += '</div>';  // gallery-item
                                 $image_container.find('.img-items-list-page').html(html);
 
-                                $('input[name=previewImgUrl]').val(firstItem.previewPhotoUrl);
-                                $('input[name=originImgUrl]').val(firstItem.originPhotoUrl);
-                                $('input[name=imgUrl]').val(firstItem.normalPhotoUrl);
+                                $('input[name=previewImgUrl]').val(previewUrl);
+                                $('input[name=originImgUrl]').val(originUrl);
+                                $('input[name=imgUrl]').val(normalUrl);
                                 $('input[name=itemType]').val("0");
                                 update_ui();
                             } else {
@@ -412,11 +412,9 @@
                                 $infobox.modal('show');
                             }
 
-                        } else {
-
-                            $infobox.find('#info-box-message').text(payload.msg || 'Upload failed');
-                            $infobox.modal('show');
-                        }
+                    } else {
+                        $infobox.find('#info-box-message').text(res.msg || 'Upload failed');
+                        $infobox.modal('show');
                     }
 
                     $("#item-image-upload").trigger('done');
@@ -491,36 +489,33 @@
 
                     console.log("done");
 
-                    var result = data && data.jqXHR ? jQuery.parseJSON(data.jqXHR.responseText) : {};
-                    var payload = Api.unwrap(result) || {};
-                    if (payload.hasOwnProperty('error')) {
-                        if (!payload.error) {
-
-                            if (payload.hasOwnProperty('videoUrl') && payload.videoUrl) {
+                    var response = data && data.result ? data.result : (data && data.jqXHR ? jQuery.parseJSON(data.jqXHR.responseText) : {});
+                    const res = Api.unwrap(response);
+                    if (!res.error) {
+                            const videoUrl = res.data.videoUrl || '';
+                            const videoMimeType = res.data.videoMimeType || 'video/mp4';
+                            if (videoUrl) {
 
                                 var html = '<div class="video-item new-post-media-item">';
                                 html +=' <div class="video-item-inner">';
                                 html += '<span class="action" onclick="delete_item($(this))">×</span>';
-                                html += '<video controls="">';
-                                html += '<source src="' + payload.videoUrl + '" type="' + (payload.videoMimeType || 'video/mp4') + '">';
+                                html += '<video controls preload="metadata">';
+                                html += '<source src="' + videoUrl + '" type="' + videoMimeType + '">';
                                 html += '</video>';  // video
                                 html += '</div>';  // video-item-inner
                                 html += '</div>';  // video-item
                                 $image_container.find('.img-items-list-page').html(html);
 
                                 $('input[name=itemType]').val("1");
-                                $('input[name=videoUrl]').val(payload.videoUrl);
+                                $('input[name=videoUrl]').val(videoUrl);
                                 update_ui();
                             } else {
                                 $infobox.find('#info-box-message').text('Upload succeeded but video data is incomplete');
                                 $infobox.modal('show');
                             }
-
-                        } else {
-
-                            $infobox.find('#info-box-message').text(payload.msg || 'Upload failed');
-                            $infobox.modal('show');
-                        }
+                    } else {
+                        $infobox.find('#info-box-message').text(res.msg || 'Upload failed');
+                        $infobox.modal('show');
                     }
 
                     $("#item-video-upload").trigger('done');
@@ -622,14 +617,15 @@
                     timeout: 30000,
                     success: function(response) {
 
-                        var data = Api.unwrap(response);
-                        if (!data || data.error === true) {
-                            alert(data.msg || 'Failed to create post');
+                        const res = Api.unwrap(response);
+                        const data = res.data || {};
+                        if (res.error) {
+                            alert(res.msg || 'Failed to create post');
                             return;
                         }
                         var mediaHtml = '';
                         if ($('input[name=itemType]').val() === "1") {
-                            mediaHtml = '<div class="video-item"><div class="video-item-inner"><video controls><source src="' + $('input[name=videoUrl]').val() + '" type="video/mp4"></video></div></div>';
+                            mediaHtml = '<div class="video-item"><div class="video-item-inner"><video controls preload="metadata"><source src="' + $('input[name=videoUrl]').val() + '" type="video/mp4"></video></div></div>';
                         } else {
                             mediaHtml = '<img src="' + $('input[name=imgUrl]').val() + '" alt="">';
                         }

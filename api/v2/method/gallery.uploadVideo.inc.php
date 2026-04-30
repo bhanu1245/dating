@@ -68,12 +68,14 @@ try {
         }
     }
 
+    if (empty($videoUpload['fileUrl'])) {
+        throw new Exception('Video URL generation failed');
+    }
+
     $result = array(
         "error" => false,
         "msg" => "success",
         "data" => array(
-            "imgFileUrl" => $imgFileUrl,
-            "videoFileUrl" => $videoUpload['fileUrl'],
             "videoUrl" => $videoUpload['fileUrl'],
             "videoMimeType" => ($ext === 'webm' ? 'video/webm' : 'video/mp4')
         )

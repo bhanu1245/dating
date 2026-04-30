@@ -104,7 +104,17 @@ class imglib extends db_connect
         $upload = $cdn->uploadMyPhoto($tmpFile);
         if ($upload['error']) return $result;
 
-        return array("error" => false, "imgUrl" => $upload['fileUrl'], "originImgUrl" => $upload['fileUrl']);
+        return array(
+            "error" => false,
+            "previewUrl" => $upload['fileUrl'],
+            "normalUrl" => $upload['fileUrl'],
+            "originUrl" => $upload['fileUrl'],
+            "previewPhotoUrl" => $upload['fileUrl'],
+            "normalPhotoUrl" => $upload['fileUrl'],
+            "originPhotoUrl" => $upload['fileUrl'],
+            "imgUrl" => $upload['fileUrl'],
+            "originImgUrl" => $upload['fileUrl']
+        );
     }
 
     public function createChatImg($tmpName, $originalName)

@@ -2,13 +2,19 @@ window.App || ( window.App = {} );
 window.Api || (window.Api = {});
 
 Api.unwrap = function (response) {
-    if (!response || typeof response !== 'object') return {};
-    if (response.data && typeof response.data === 'object') return response.data;
-    return response;
+    if (!response || typeof response !== 'object') return { error: true, msg: 'Empty response', data: {} };
+    if (response.error !== undefined) {
+        if (!response.data || typeof response.data !== 'object') response.data = {};
+        if (typeof response.msg !== 'string') response.msg = '';
+        return response;
+    }
+    if (response.data && typeof response.data === 'object') return { error: false, msg: '', data: response.data };
+    return { error: false, msg: '', data: response };
 };
 
 Api.isOk = function (response) {
-    return !!(response && response.error === false && response.data);
+    var res = Api.unwrap(response);
+    return res.error === false;
 };
 
 App.hTimer = 0;
@@ -28,8 +34,9 @@ App.run = function() {
         data: "accountId=" + account.id + "&accessToken=" + account.accessToken,
         success: function(response) {
 
-            var data = Api.unwrap(response);
-            if (Api.isOk(response) || data.error === false) {
+            var res = Api.unwrap(response);
+            var data = res.data || {};
+            if (!res.error) {
 
                 if (data.hasOwnProperty("registrationComplete")) {
                     account.registrationComplete = parseInt(data.registrationComplete, 10) || 0;
@@ -117,9 +124,10 @@ Gallery.add = function (itemImg, itemPreviewImg, itemOriginImg) {
         data: 'accessToken=' + account.accessToken + "&accountId=" + account.id + "&imgUrl=" + itemImg,
         dataType: 'json',
         success: function(response) {
-            var data = Api.unwrap(response);
-            if (Api.isOk(response) || data.error === false) {
-                var imageUrl = data.imgUrl || itemImg;
+            var res = Api.unwrap(response);
+            var data = res.data || {};
+            if (!res.error) {
+                var imageUrl = data.imgUrl || data.originUrl || itemImg;
                 if ($('div.gallery-item img[src="' + imageUrl + '"]').length) {
                     return;
                 }
@@ -127,7 +135,7 @@ Gallery.add = function (itemImg, itemPreviewImg, itemOriginImg) {
                 $('div.gallery-content, div.items-view').first().prepend(html);
                 $('.gallery-empty-state').addClass('hidden');
             } else {
-                $('.gallery-upload-error').text(data.msg || 'Upload failed').removeClass('hidden');
+                $('.gallery-upload-error').text(res.msg || 'Upload failed').removeClass('hidden');
             }
         }
     });
@@ -152,14 +160,30 @@ window.Items || (window.Items = {});
 
 Items.more = function (url, offset) {
 
+    var $loader = $('header.loading-banner');
+    $('button.loading-button').attr("disabled", "disabled");
     $.ajax({
         type: 'POST',
         url: url,
         data: 'itemId=' + offset,
         success: function(response){
-            if (response.html){
+            var res = Api.unwrap(response);
+            var items = (res.data && res.data.items) ? res.data.items : [];
+
+            if (response && response.html){
                 $("div.items-view").append(response.html);
+            } else if (!res.error && !items.length) {
+                if (!$('.no-data-banner').length) {
+                    $("div.items-view").append('<div class="no-data-banner card py-3 px-3 text-center">No data</div>');
+                }
             }
+            $('header.loading-banner').remove();
+        },
+        error: function () {
+            $('header.loading-banner').remove();
+        },
+        complete: function () {
+            $('button.loading-button').removeAttr("disabled");
         }
     });
 };
@@ -185,9 +209,10 @@ Item.like = function (itemId, itemType) {
         url: '/api/v2/method/gallery.like',
         data: 'accessToken=' + account.accessToken + "&accountId=" + account.id + "&itemId=" + itemId,
         success: function(response){
-            var data = Api.unwrap(response);
-            if (data.error === true) {
-                $('.action-error').text(data.msg || 'Request failed').removeClass('hidden');
+            var res = Api.unwrap(response);
+            var data = res.data || {};
+            if (res.error) {
+                $('.action-error').text(res.msg || 'Request failed').removeClass('hidden');
                 return;
             }
             if (data.myLike) {
@@ -195,6 +220,10 @@ Item.like = function (itemId, itemType) {
             } else {
                 $('.item-like-button[data-id=' + itemId + ']').removeClass("active");
             }
+            $('.hotgame-card, .hot-item-card').addClass('liked');
+            setTimeout(function () {
+                $('.hotgame-card, .hot-item-card').removeClass('liked');
+            }, 300);
 
             if (data.hasOwnProperty('nextUser') && data.nextUser) {
                 var next = data.nextUser;
@@ -218,12 +247,13 @@ $(document).off('click', '.friend-add-button').on('click', '.friend-add-button',
     var profileId = $(this).data('profile-id');
     var $btn = $(this);
     $.post('/api/' + options.api_version + '/method/friends.sendRequest', {accountId: account.id, accessToken: account.accessToken, profileId: profileId}, function (response) {
-        var data = Api.unwrap(response);
-        if (data && data.error !== true) {
+        var res = Api.unwrap(response);
+        var data = res.data || {};
+        if (!res.error) {
             $btn.addClass('disabled active').prop('disabled', true).text('Requested');
             showActionError('');
         } else {
-            showActionError((data && data.msg) || 'Unable to add friend');
+            showActionError(res.msg || 'Unable to add friend');
         }
     }, 'json').fail(function () {
         showActionError('Unable to add friend: network error');
@@ -241,14 +271,15 @@ $(document).off('click', '.gift-send-button').on('click', '.gift-send-button', f
         message: $('textarea[name=gift_message]').val() || ''
     };
     $.post('/api/' + options.api_version + '/method/gifts.send', payload, function (response) {
-        var data = Api.unwrap(response);
-        if (data && data.error !== true) {
+        var res = Api.unwrap(response);
+        var data = res.data || {};
+        if (!res.error) {
             updateBalanceUI(data.balance);
             $('.gift-send-status').text('Gift sent').removeClass('hidden');
             $('.gift-send-button').prop('disabled', true).addClass('disabled');
             showActionError('');
         } else {
-            showActionError((data && data.msg) || 'Gift failed');
+            showActionError(res.msg || 'Gift failed');
         }
     }, 'json').fail(function () {
         showActionError('Gift failed: network error');
@@ -262,8 +293,8 @@ $(document).ajaxSuccess(function(event, xhr) {
         var response = JSON.parse(xhr.responseText);
         var payload = Api.unwrap(response);
 
-        if (payload && payload.error === false && payload.photoUrl) {
-            $("img.main-profile-photo, img.avatar").attr("src", payload.photoUrl + "?t=" + Date.now());
+        if (payload && payload.error === false && payload.data && payload.data.photoUrl) {
+            $("img.main-profile-photo, img.avatar").attr("src", payload.data.photoUrl + "?t=" + Date.now());
             if (typeof $ !== "undefined") {
                 $('#photoModal').modal('hide');
             }
@@ -286,9 +317,10 @@ Spotlight.add = function (btn) {
     var $btn = $(btn);
     $btn.prop('disabled', true);
     $.post('/api/' + options.api_version + '/method/spotlight.add', {accountId: account.id, accessToken: account.accessToken}, function (response) {
-        var data = Api.unwrap(response);
-        if (!data || data.error === true) {
-            showActionError((data && data.msg) || 'Unable to activate spotlight');
+        var res = Api.unwrap(response);
+        var data = res.data || {};
+        if (res.error) {
+            showActionError(res.msg || 'Unable to activate spotlight');
         } else {
             updateBalanceUI(data.balance);
             $('#spotlight-dlg').modal('hide');
