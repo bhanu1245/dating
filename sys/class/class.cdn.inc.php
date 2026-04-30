@@ -11,11 +11,21 @@ class cdn extends db_connect
     {
         $result = array(
             "error" => true,
-            "error_code" => ERROR_UNKNOWN,
+            "msg" => "failed",
             "fileUrl" => ""
         );
 
-        $baseDir = rtrim($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 2), '/').'/'.trim($folder, '/').'/';
+        $folder = trim((string) $folder, '/');
+        if ($folder === '') {
+            return $result;
+        }
+
+        $docRoot = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
+        if ($docRoot === '') {
+            $docRoot = rtrim(dirname(__DIR__, 3), '/');
+        }
+
+        $baseDir = $docRoot.'/'.$folder.'/';
 
         if (!is_dir($baseDir) && !@mkdir($baseDir, 0775, true)) {
             return $result;
@@ -30,7 +40,7 @@ class cdn extends db_connect
 
         if (@copy($filePath, $target)) {
             $result['error'] = false;
-            $result['error_code'] = ERROR_SUCCESS;
+            $result['msg'] = 'success';
             $result['fileUrl'] = APP_URL.'/'.trim($folder, '/').'/'.$fileName;
         }
 

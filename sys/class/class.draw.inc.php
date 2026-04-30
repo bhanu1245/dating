@@ -526,8 +526,9 @@ class draw extends db_connect
 
                         ?>
 
-                        <video width = "100%" height = "auto" style="max-height: 300px" controls>
-                            <source src="<?php echo $post['videoUrl']; ?>" type="video/mp4">
+                        <?php $videoType = (stripos($post['videoUrl'], '.webm') !== false) ? 'video/webm' : 'video/mp4'; ?>
+                        <video width = "100%" height = "auto" style="max-height: 300px" controls onerror="console.error('<?php echo $post['videoUrl']; ?>')">
+                            <source src="<?php echo $post['videoUrl']; ?>" type="<?php echo $videoType; ?>">
                         </video>
 
                         <?php
