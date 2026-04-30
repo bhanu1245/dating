@@ -384,13 +384,14 @@
 
                     console.log("done");
 
-                    var result = jQuery.parseJSON(data.jqXHR.responseText);
-                    var payload = Api.unwrap(result);
+                    var result = data && data.jqXHR ? jQuery.parseJSON(data.jqXHR.responseText) : {};
+                    var payload = Api.unwrap(result) || {};
 
                     if (payload.hasOwnProperty('error')) {
                         if (payload.error === false) {
-                            var firstItem = (payload.items && payload.items.length) ? payload.items[0] : payload;
-                            if (firstItem.hasOwnProperty('originPhotoUrl')) {
+                            var items = Array.isArray(payload.items) ? payload.items : [];
+                            var firstItem = items.length ? items[0] : payload;
+                            if (firstItem && firstItem.hasOwnProperty('originPhotoUrl')) {
 
                                 var html = '<div class="gallery-item new-post-media-item">';
                                 html +=' <div class="item-inner">';
@@ -405,6 +406,10 @@
                                 $('input[name=originImgUrl]').val(firstItem.originPhotoUrl);
                                 $('input[name=imgUrl]').val(firstItem.normalPhotoUrl);
                                 $('input[name=itemType]').val("0");
+                                update_ui();
+                            } else {
+                                $infobox.find('#info-box-message').text('Upload succeeded but image data is incomplete');
+                                $infobox.modal('show');
                             }
 
                         } else {
@@ -421,6 +426,8 @@
                     console.log("fail");
 
                     console.log(data.errorThrown);
+                    $infobox.find('#info-box-message').text('Image upload failed');
+                    $infobox.modal('show');
                 },
                 always: function (e, data) {
 
@@ -484,12 +491,12 @@
 
                     console.log("done");
 
-                    var result = jQuery.parseJSON(data.jqXHR.responseText);
-                    var payload = Api.unwrap(result);
+                    var result = data && data.jqXHR ? jQuery.parseJSON(data.jqXHR.responseText) : {};
+                    var payload = Api.unwrap(result) || {};
                     if (payload.hasOwnProperty('error')) {
                         if (!payload.error) {
 
-                            if (payload.hasOwnProperty('videoUrl')) {
+                            if (payload.hasOwnProperty('videoUrl') && payload.videoUrl) {
 
                                 var html = '<div class="video-item new-post-media-item">';
                                 html +=' <div class="video-item-inner">';
@@ -503,6 +510,10 @@
 
                                 $('input[name=itemType]').val("1");
                                 $('input[name=videoUrl]').val(payload.videoUrl);
+                                update_ui();
+                            } else {
+                                $infobox.find('#info-box-message').text('Upload succeeded but video data is incomplete');
+                                $infobox.modal('show');
                             }
 
                         } else {
@@ -519,6 +530,8 @@
                     console.log("fail");
 
                     console.log(data.errorThrown);
+                    $infobox.find('#info-box-message').text('Video upload failed');
+                    $infobox.modal('show');
                 },
                 always: function (e, data) {
 
@@ -610,7 +623,7 @@
                     success: function(response) {
 
                         var data = Api.unwrap(response);
-                        if (data.error === true) {
+                        if (!data || data.error === true) {
                             alert(data.msg || 'Failed to create post');
                             return;
                         }
@@ -624,9 +637,11 @@
                         $('div.items-view').prepend(card);
                         delete_item($image_container.find('.action'));
                         $('textarea[name=comment]').val('');
+                        update_ui();
                     },
                     error: function(xhr, type){
-
+                        $infobox.find('#info-box-message').text('Failed to create post');
+                        $infobox.modal('show');
                     }
                 });
             }
